@@ -12,11 +12,16 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   interpolate,
+  Extrapolation,
   useAnimatedScrollHandler,
 } from "react-native-reanimated";
 const { width, height } = Dimensions.get("window");
 
-// const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
+
+const _indicatorSize = 4;
+const _spacing = 14;
+const _buttonSize = 64;
 
 const sample = [
   {
@@ -44,17 +49,66 @@ const sample = [
 const OnboardingFlow = (props: any) => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <Animated.View>
-        <Screen data={sample} />
-      </Animated.View>
+      <AnimatedFlatList
+        data={sample}
+        renderItem={({ item, index }) => <Screen item={item} index={index} />}
+        pagingEnabled
+        decelerationRate={"fast"}
+        bounces={false}
+        horizontal
+      />
     </GestureHandlerRootView>
   );
 };
 
-const Screen = ({ data }: { data: Array<Object> }) => {
+const Screen = ({ item, index }: { item: any; index: number }) => {
   return (
     <View style={styles.container}>
       <Image style={styles.img} source={require("../assets/expo_logo.png")} />
+      <Text>{item.title}</Text>
+    </View>
+  );
+};
+
+const PaginationDot = ({ scrollY, index }: { scrollY: any; index: number }) => {
+  const stylez = useAnimatedStyle(() => {
+    return {
+      height: interpolate(
+        scrollY.value,
+        [index - 1, index, index + 1],
+        [_indicatorSize, _indicatorSize * 6, _indicatorSize],
+        Extrapolation.CLAMP
+      ),
+    };
+  });
+  return (
+    <Animated.View
+      style={[
+        {
+          width: _indicatorSize,
+          height: _indicatorSize,
+          borderRadius: _indicatorSize / 2,
+          backgroundColor: "white",
+          marginBottom: _indicatorSize / 2,
+        },
+        stylez,
+      ]}
+    />
+  );
+};
+
+const Pagination = ({
+  data,
+  scrollX,
+}: {
+  data: Array<Object>;
+  scrollX: any;
+}) => {
+  return (
+    <View style={{ position: "absolute", left: _spacing }}>
+      {data.map((_, index) => (
+        <PaginationDot index={index} scrollY={scrollY} />
+      ))}
     </View>
   );
 };
