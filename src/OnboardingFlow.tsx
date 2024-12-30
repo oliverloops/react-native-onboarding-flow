@@ -53,6 +53,7 @@ const OnboardingFlow = (props: any) => {
         data={sample}
         renderItem={({ item, index }) => <Screen item={item} index={index} />}
         pagingEnabled
+        showsHorizontalScrollIndicator={false}
         decelerationRate={"fast"}
         bounces={false}
         horizontal
@@ -62,11 +63,23 @@ const OnboardingFlow = (props: any) => {
 };
 
 const Screen = ({ item, index }: { item: any; index: number }) => {
+  //* Build Zoom Animation
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((event) => {
+    scrollY.value = event.contentOffset.x;
+  });
+  const stylez = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: interpolate(scrollY.value, [0, width], [1, 0.5]) }],
+    };
+  });
+
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, stylez]}>
       <Image style={styles.img} source={require("../assets/expo_logo.png")} />
+      <Pagination data={sample} scrollY={scrollY} />
       <Text>{item.title}</Text>
-    </View>
+    </Animated.View>
   );
 };
 
@@ -88,7 +101,7 @@ const PaginationDot = ({ scrollY, index }: { scrollY: any; index: number }) => {
           width: _indicatorSize,
           height: _indicatorSize,
           borderRadius: _indicatorSize / 2,
-          backgroundColor: "white",
+          backgroundColor: "black",
           marginBottom: _indicatorSize / 2,
         },
         stylez,
@@ -99,10 +112,10 @@ const PaginationDot = ({ scrollY, index }: { scrollY: any; index: number }) => {
 
 const Pagination = ({
   data,
-  scrollX,
+  scrollY,
 }: {
   data: Array<Object>;
-  scrollX: any;
+  scrollY?: any;
 }) => {
   return (
     <View style={{ position: "absolute", left: _spacing }}>
@@ -119,8 +132,8 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    width: Dimensions.get("window").width,
-    height: Dimensions.get("window").height,
+    width: width,
+    height: height,
   },
   img: {
     width: 200,
